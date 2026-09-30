@@ -1,0 +1,11 @@
+# Keep the committed sources and built artifacts in LF: line endings are not
+# content here, and a CRLF checkout of the built lib/ files would show up as a
+# diff on every clone.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

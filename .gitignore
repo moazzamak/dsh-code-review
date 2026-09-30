@@ -1,0 +1,16 @@
+# Installed dependencies
+node_modules/
+.pnpm-store/
+
+# TypeScript build metadata (the emitted JavaScript is committed on purpose:
+# `dsh plugin add <git-url>` installs this repository as it is, with no build)
+lib/*.tsbuildinfo
+*.tsbuildinfo
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+*.log

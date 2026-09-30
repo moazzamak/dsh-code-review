@@ -1,0 +1,21 @@
+# The code-review pack's patch: one row that mounts the pack.
+#
+# The row is an ordinary plugin row, so the Host half (the `dsh-change-review`
+# runtime skill) and the browser half (`/review` over the pinned Changes page)
+# both mount through it: the browser half is discovered from the package's
+# `dsh.client` declaration, exactly like the shipped client rows in the
+# dsh-web-app bundle.
+#
+# The row's `name` is the installed package name. If you publish or install this
+# pack under a different name, change that name here to match, because the
+# composition resolves the row by it.
+#
+# Nothing here restates the review surface itself. The diff, the chunk
+# decisions, the pending list, and the rejection note that reaches the model are
+# part of DSH; this pack adds the shortcut and the instructions that make the
+# loop cheap to use.
+
+- insert:
+    # The pack: `/review` in the input, and the review workflow as a Skill.
+    - id: code-review
+      name: '@moazzamak/dsh-code-review'
