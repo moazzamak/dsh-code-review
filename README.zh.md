@@ -2,6 +2,8 @@
 
 面向 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）的**代码审阅包**。它提供 `/review` 快捷方式以显示 dsh 固定的 **“变更”** 页面，并注册 `dsh-change-review` **技能**，让 agent（智能体）理解你的 **保留** / **撤销** 决定意味着什么。
 
+> **非官方社区包。** 与 DeepSeek 无隶属关系，未获其背书，也非由其发布。详见[名称与隶属](#名称与隶属)。
+
 [English](README.md) | 中文
 
 ## 它提供什么
@@ -76,6 +78,21 @@ Host 半边不接受配置，并通过 `ctx.effect()` 注册技能，因此卸�
 ## 开发
 
 见 [DEVELOPMENT.md](DEVELOPMENT.md)。简言之：本仓库原样镜像 `deepseek-harness` 单仓库中的 `packages/bundle/code-review`（源码与 spec），并附带构建好的 `lib/`，因此安装时无需构建步骤；重新构建与运行测试需要该检出。
+
+## 名称与隶属
+
+本包是面向 DeepSeek Harness 的**非官方、社区构建**的 bundle。它与 DeepSeek 没有隶属关系，未获其背书，也非由其维护或发布——它所接入的审阅流程是 dsh 自身的代码，与本包一样以 MIT 许可发布。DeepSeek Harness 本身位于 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)；dsh 的问题请提交到那里（上游），而不是这里。
+
+该名称在 npm 上**并不唯一**，若干互不相关的包使用了相似名称：
+
+| 包 | 说明 |
+| --- | --- |
+| `dsh-code-review` | 只读的代码审阅 **agent 预设**（仅 Host；一个审阅代码的 agent） |
+| `@michengai/dsh-code-review` | Codex 风格审阅 agent，支持中英双语报告 |
+| `@dsh-plugin/dsh-code-review` | 逐轮改动摘要、审阅标签页与带保护的撤销 |
+| `@yangzhe1991/dsh-code-review` | 双列 git diff 审阅页面 |
+
+本包是 **`@moazzamak/dsh-code-review`**，仅从[本仓库](https://github.com/moazzamak/dsh-code-review)发布。如果你安装的是上面其他包之一，那你安装的是别人的插件——请在反馈本包问题之前，先确认 `dsh.profile.bundles` 或组合行中的包名。
 
 ## 许可
 

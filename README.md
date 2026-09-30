@@ -2,6 +2,8 @@
 
 A **code-review pack** for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`). It adds the `/review` shortcut that reveals DSH's pinned **Changes** page, and registers the `dsh-change-review` **Skill** that teaches an agent what your **Keep** / **Reject** decisions mean.
 
+> **Unofficial community pack.** Not affiliated with, endorsed by, or published by DeepSeek. See [Naming and affiliation](#naming-and-affiliation).
+
 English | [中文](README.zh.md)
 
 ## What it adds
@@ -76,6 +78,21 @@ The Host half takes no configuration and registers the Skill through `ctx.effect
 ## Development
 
 See [DEVELOPMENT.md](DEVELOPMENT.md). In short: this repository mirrors `packages/bundle/code-review` of the `deepseek-harness` monorepo verbatim (source and specs), plus the built `lib/` so the pack installs without a build step; rebuilding and running the tests needs that checkout.
+
+## Naming and affiliation
+
+This is an **unofficial, community-built** bundle for DeepSeek Harness. It is not affiliated with, endorsed by, or maintained by DeepSeek, and it is not published by them — the review surface it plugs into is DSH's own code, MIT-licensed like this pack. DeepSeek Harness itself lives at [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness); report dsh problems there or upstream, not here.
+
+The name is **not unique on npm**. Several unrelated packages carry a similar one:
+
+| Package | What it is |
+| --- | --- |
+| `dsh-code-review` | A read-only code-review **agent preset** (host-only; an agent that reviews code) |
+| `@michengai/dsh-code-review` | Codex-style review agents with bilingual reports |
+| `@dsh-plugin/dsh-code-review` | Per-turn change summaries, a review tab, and guarded undo |
+| `@yangzhe1991/dsh-code-review` | A two-column git-diff review page |
+
+This pack is **`@moazzamak/dsh-code-review`**, published from [this repository](https://github.com/moazzamak/dsh-code-review) only. If you install one of the others, you are installing someone else's plugin — check the package name in `dsh.profile.bundles` or in the composition row before reporting a problem here.
 
 ## License
 

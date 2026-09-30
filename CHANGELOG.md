@@ -6,6 +6,21 @@ All notable changes to this pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-09-30
+
+Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
+unchanged.
+
+### Changed
+
+- The README now states that this is an **unofficial community pack**, not
+  affiliated with, endorsed by, or published by DeepSeek, and points dsh issues
+  upstream.
+- The README now records that the name is not unique on npm — `dsh-code-review`,
+  `@michengai/dsh-code-review`, `@dsh-plugin/dsh-code-review`, and
+  `@yangzhe1991/dsh-code-review` are unrelated packages — and that this pack is
+  `@moazzamak/dsh-code-review`, published from this repository only.
+
 ## [0.1.0] — 2026-09-30
 
 Initial release.
@@ -38,5 +53,6 @@ Initial release.
 - Requires a dsh build that ships that surface — see
   [Requirements](README.md#requirements).
 
-[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.1
 [0.1.0]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.0
