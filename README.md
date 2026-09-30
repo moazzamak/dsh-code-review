@@ -20,6 +20,23 @@ dsh plugin --profile web remove @moazzamak/dsh-code-review
 
 Once installed, three things appear: a **Plugins** entry in Settings, `/review` in the input, and `dsh-change-review` in the agent's Skill list.
 
+### Desktop app
+
+The Electron desktop build runs the same dsh surfaces, so the **Changes** page is there without any plugin, and a build that carries the shortcut layer gives you the same actions from the keyboard:
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl/Cmd+Shift+R` | Open the **Changes** page |
+| `Ctrl/Cmd+Shift+K` / `Ctrl/Cmd+Shift+J` | Keep / reject the change under review |
+| `Ctrl/Cmd+Shift+A` / `Ctrl/Cmd+Shift+D` | Keep / reject everything still undecided in the file |
+| `Alt+Down` / `Alt+Up` | Next / previous file awaiting review |
+
+Adding *this pack* to a packaged desktop app is a separate step: the app's **Desktop Plugins** window (`Ctrl/Cmd+,`) installs plugins into its own profile with its bundled pnpm. That window accepts npm registry specs only — `name`, `name@version`, or `name@tag` — and refuses `github:` and `file:` specs, so the Git install above is for the web/CLI profile. It needs the pack published to npm first:
+
+```sh
+npm publish    # from a checkout of this repository, logged in as the package owner
+```
+
 ## What you get
 
 - **`/review`** — opens the pinned **Changes** page in the right sidebar: every file the agent changed that still has a change you have not decided. The change count in the Session header opens the same page.

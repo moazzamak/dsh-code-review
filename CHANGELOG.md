@@ -6,6 +6,20 @@ All notable changes to this pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-09-30
+
+Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
+unchanged.
+
+### Added
+
+- The READMEs now cover the **desktop app**: the review page is part of the
+  desktop build, the keyboard shortcuts it carries for the same actions, and how
+  to install this pack there. The app's Desktop Plugins window accepts npm
+  registry specs only (`name`, `name@version`, `name@tag`) and refuses `github:`
+  and `file:` specs, so the Git install documented for the web profile does not
+  apply to it — the pack has to be published to npm first.
+
 ## [0.1.2] — 2026-09-30
 
 Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
@@ -68,7 +82,8 @@ Initial release.
 - Requires a dsh build that ships that surface — see
   [Requirements](README.md#requirements).
 
-[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.3
 [0.1.2]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.2
 [0.1.1]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.1
 [0.1.0]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.0

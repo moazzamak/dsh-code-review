@@ -20,6 +20,23 @@ dsh plugin --profile web remove @moazzamak/dsh-code-review
 
 安装完成后会出现三处变化：设置中的 **插件** 条目、输入框中的 `/review`，以及 agent 技能列表中的 `dsh-change-review`。
 
+### 桌面应用
+
+Electron 桌面构建运行的是同一套 dsh 表层，因此 **“变更”** 页面无需任何插件即可使用；若该构建带有快捷键层，你还可以用键盘完成同样的操作：
+
+| 快捷键 | 操作 |
+| --- | --- |
+| `Ctrl/Cmd+Shift+R` | 打开 **“变更”** 页面 |
+| `Ctrl/Cmd+Shift+K` / `Ctrl/Cmd+Shift+J` | 保留／撤销当前审阅的改动 |
+| `Ctrl/Cmd+Shift+A` / `Ctrl/Cmd+Shift+D` | 保留／撤销文件中所有仍未决定的改动 |
+| `Alt+Down` / `Alt+Up` | 下一个／上一个待审阅文件 |
+
+把*本包*加入打包后的桌面应用则是另一步：应用内的 **桌面插件** 窗口（`Ctrl/Cmd+,`）用其内置 pnpm 把插件安装到它自己的 profile。该窗口只接受 npm 仓库规格——`name`、`name@version` 或 `name@tag`——并拒绝 `github:` 与 `file:` 规格，因此上面的 Git 安装方式适用于 Web／CLI profile。桌面端需要本包先发布到 npm：
+
+```sh
+npm publish    # 在本仓库的检出目录中，以包所有者身份登录后执行
+```
+
 ## 你会得到什么
 
 - **`/review`** —— 打开右侧边栏中固定的 **“变更”** 页面：agent 改动过、且仍有你尚未决定的改动的每个文件。会话标题栏中的改动计数打开的是同一个页面。
