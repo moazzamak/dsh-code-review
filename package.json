@@ -1,7 +1,7 @@
 {
   "name": "@moazzamak/dsh-code-review",
   "description": "Code-review pack for dsh: adds the /review shortcut that reveals the pinned Changes page and registers the dsh-change-review Skill that teaches an agent what a rejected change means",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Moazzam Abdullah Khan (https://github.com/moazzamak)",
   "license": "MIT",
   "publishConfig": {

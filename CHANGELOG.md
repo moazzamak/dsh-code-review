@@ -6,6 +6,21 @@ All notable changes to this pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-09-30
+
+Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
+unchanged.
+
+### Changed
+
+- Both READMEs are now written for people using the pack rather than for whoever
+  maintains it: install and removal, what appears after installing, a
+  step-by-step walkthrough of reviewing, keeping, and rejecting a change, what
+  the agent is told about a rejection, and the dsh build the pack needs.
+- Maintainer material moved out of the README into [DEVELOPMENT.md](DEVELOPMENT.md):
+  the repository layout, and the one identity shared by the package name, the
+  composition row, and the browser bundle id.
+
 ## [0.1.1] — 2026-09-30
 
 Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
@@ -53,6 +68,7 @@ Initial release.
 - Requires a dsh build that ships that surface — see
   [Requirements](README.md#requirements).
 
-[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.2
 [0.1.1]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.1
 [0.1.0]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.0

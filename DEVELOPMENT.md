@@ -20,6 +20,30 @@ Two consequences worth knowing before you edit anything:
    monorepo's project graph (`vendor/cordis`, `packages/client/*`, …). A
    standalone `tsc -b` therefore cannot resolve its references.
 
+## Repository layout
+
+| Path | Role |
+| --- | --- |
+| `package.json` | `dsh.bundle.patch` plus the `dsh.client` browser-half declaration |
+| `cordis.patch.yml` | the single composition layer: insert the pack's row |
+| `src/index.ts`, `src/skill.ts` | Host half — the `dsh-change-review` runtime Skill |
+| `src/client/index.ts`, `src/client/locales.ts` | browser half — `/review` and its copy (zh source of truth + en) |
+| `lib/` | built artifacts, committed (see above) |
+| `tests/` | the two specs, run from the monorepo |
+
+## Composition row name
+
+Three places spell one identity, and they have to agree:
+
+1. `name` in `package.json` — what the profile installs and lists.
+2. the row's `name` in `cordis.patch.yml` — what the composition resolves.
+3. the first argument of `clientBundle(...)` in `tsdown.config.ts` — the id the
+   browser module loader registers the built `lib/client.js` under.
+
+A composition matches a row to its browser half by that id, so a mismatch mounts
+the Host half and nothing else: the Skill registers, `/review` never appears.
+Rename all three together.
+
 ## Rebuild
 
 From a `deepseek-harness` checkout, with this repository either copied in as
