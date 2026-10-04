@@ -9,6 +9,15 @@ import { describe, expect, it } from 'vitest'
 import { apply, name } from '../src/index.ts'
 import { CODE_REVIEW_SKILL, CODE_REVIEW_SKILL_DESCRIPTION, CODE_REVIEW_SKILL_NAME } from '../src/skill.ts'
 
+/**
+ * The Skill body with its line wrapping collapsed.
+ *
+ * The body is prose wrapped at eighty columns, so a phrase a test cares about
+ * can straddle a line break. Reading the sentence rather than the file keeps
+ * these assertions about what the Skill teaches instead of where it wraps.
+ */
+const BODY = CODE_REVIEW_SKILL.replace(/\s+/g, ' ')
+
 /** What `ctx.skills.register()` receives, as this pack uses it. */
 interface Registration {
   name: string
@@ -67,14 +76,35 @@ describe('code-review pack node half', () => {
     expect(registrations).toEqual([])
   })
 
-  it('teaches that a rejected chunk is gone and must not be re-applied', () => {
-    expect(CODE_REVIEW_SKILL).toContain('Do not re-apply a rejected change')
-    expect(CODE_REVIEW_SKILL).toContain('Re-read the file before')
+  it('teaches that this build reverts nothing behind the agent\'s back', () => {
+    expect(BODY).toContain('no keep/reject step')
+    expect(BODY).toContain('Nothing is reverted behind your back')
+    expect(BODY).toContain('the change is still in the file')
   })
 
-  it('names the page, the shortcut, and the chunk unit it describes', () => {
-    expect(CODE_REVIEW_SKILL).toContain('Changes')
-    expect(CODE_REVIEW_SKILL).toContain('/review')
-    expect(CODE_REVIEW_SKILL).toContain('git add -i')
+  it('does not promise the keep/reject contract this build removed', () => {
+    // dsh 0.1.5 reverted a rejected chunk and reported it back to the model.
+    // 0.2 removed that surface, so an agent told to expect it would wait for a
+    // note that never arrives and would distrust its own edits.
+    for (const removed of ['Keep / Reject', 'Reject', 'rejected chunk', 'git add -i']) {
+      expect(BODY).not.toContain(removed)
+    }
+  })
+
+  it('names the review surface it describes, and the unit the User reviews', () => {
+    expect(BODY).toContain('/review')
+    expect(BODY).toContain('in the right sidebar')
+    expect(BODY).toContain('One coherent change per turn')
+    expect(BODY).toContain('The turn is the unit the User reviews, not the tool call')
+  })
+
+  it('warns that a subagent\'s edits never reach the User\'s diff', () => {
+    expect(BODY).toContain('A subagent\'s edits are never part of the User\'s per-turn diff')
+    expect(BODY).toContain('your own message has to carry')
+  })
+
+  it('states what the record leaves out, which no tool result can carry', () => {
+    expect(BODY).toContain('In a working directory with no git repository, only file-tool edits are listed')
+    expect(BODY).toContain('A Session reopened after a Host restart has no comparison for its earlier turns')
   })
 })

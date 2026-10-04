@@ -6,6 +6,57 @@ All notable changes to this pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-10-04
+
+Ported to the review surface dsh 0.2 ships. **Breaking**: `/review` no longer
+opens the pinned Changes page, because dsh 0.2 removed it along with per-chunk
+Keep/Reject, the working-tree revert, and the rejection note that reached the
+model. Nothing on the 0.2 side reverts a change behind the agent's back.
+
+### Changed
+
+- **`/review`** now opens the newest recorded turn's **changed files** in the
+  right sidebar, each with its side-by-side or unified comparison. That view is
+  the `changes-review` tab type owned by `@deepseek-ai/dsh-client-ui-deliverables`.
+- The command is offered only while all three of its preconditions hold: the
+  comparison view is registered, the Session's right column is mounted, and the
+  Session holds a turn whose changes the recorder announced. `isMounted()`, which
+  dsh 0.2 removed from the right-sidebar service, is replaced by the
+  mounted-Session snapshot.
+- The `dsh-change-review` Skill was rewritten for the 0.2 record: the turn, not
+  the tool call, is the unit the User reviews; only top-level turns are recorded,
+  so a subagent's edits never reach the diff; comparisons live only while the
+  Session lives; and nothing is reverted, so a comment on a change means the
+  change is still in the file. It no longer teaches a rejection contract that
+  0.2 cannot honour.
+- The pack finds the turn's coordinates by reading the Session's own loaded event
+  window (`ctx.sessions.binding(sessionId).eventSource`) instead of importing the
+  changed-files constant. `dsh.client.external` is therefore empty, and the built
+  browser bundle has no dependency on any other dsh package — the whole
+  cross-package surface is restated in `src/protocol.ts` and pinned by tests.
+
+### Added
+
+- `src/protocol.ts` — the one module that restates the surface this pack does not
+  own (the tab kind, the `workspace/changes` event, and the
+  `dsh-resource://changes-review/session/<sessionId>/<seq>/<turn>` address), with
+  `tests/protocol.spec.ts` asserting each restated fact so an upstream rename
+  fails loudly instead of turning `/review` into a silent no-op.
+- Tests for the event-window scan, the three availability preconditions, the
+  address encoding, and the refusal of an announcement whose payload names no
+  turn.
+
+### Removed
+
+- The dependency on `@deepseek-ai/dsh-client-ui-sidebar-documentpreview` and its
+  `CHANGES_KIND`, which dsh 0.2 deleted.
+
+### Notes
+
+- 0.1.x remains the release for a dsh 0.1.5 build, where the Changes page and
+  keep/reject still exist. The README's compatibility table states which pack
+  drives which dsh.
+
 ## [0.1.3] — 2026-09-30
 
 Documentation only; `lib/` is byte-identical to 0.1.0 and the composition is
@@ -46,8 +97,8 @@ unchanged.
   affiliated with, endorsed by, or published by DeepSeek, and points dsh issues
   upstream.
 - The README now records that the name is not unique on npm — `dsh-code-review`,
-  `@michengai/dsh-code-review`, `@dsh-plugin/dsh-code-review`, and
-  `@yangzhe1991/dsh-code-review` are unrelated packages — and that this pack is
+  `@moazzamak/dsh-code-review`, `@moazzamak/dsh-code-review`, and
+  `@moazzamak/dsh-code-review` are unrelated packages — and that this pack is
   `@moazzamak/dsh-code-review`, published from this repository only.
 
 ## [0.1.0] — 2026-09-30
@@ -82,7 +133,8 @@ Initial release.
 - Requires a dsh build that ships that surface — see
   [Requirements](README.md#requirements).
 
-[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/moazzamak/dsh-code-review/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.2.0
 [0.1.3]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.3
 [0.1.2]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.2
 [0.1.1]: https://github.com/moazzamak/dsh-code-review/releases/tag/v0.1.1

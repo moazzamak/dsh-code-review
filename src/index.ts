@@ -1,14 +1,13 @@
 /**
  * Node half of the code-review pack.
  *
- * The pack exists to make DSH's built-in review loop cheap to use, and the half
- * that the model can see is a Skill: `dsh-change-review` states what a rejected
- * chunk means and how to write changes the User can decide one at a time. It is
- * registered as a runtime Skill, so it lives exactly as long as this row does
- * and needs no project directory or user configuration.
+ * The half that the model can see is a Skill: `dsh-change-review` states what
+ * each turn's recorded diff covers and how to keep a turn cheap to review. It
+ * is registered as a runtime Skill, so it lives exactly as long as this row
+ * does and needs no project directory or user configuration.
  *
- * The browser half (`./client`) adds `/review`; the diff, the decisions, the
- * pending list, and the rejection note itself belong to DSH.
+ * The browser half (`./client`) adds `/review`; the recording, the per-file
+ * comparison, and the turn-tail card belong to dsh.
  * @module @deepseek-ai/dsh-code-review
  */
 

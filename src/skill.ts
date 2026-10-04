@@ -1,11 +1,12 @@
 /**
  * The pack's Skill body.
  *
- * The review surface itself is DSH's; what an agent is missing without this
- * text is the *contract* around it — that a rejected chunk is already gone from
- * the file, that a rejection comes back as a note naming what was removed, and
- * that one tool call is one reviewable chunk. The body is a plain constant so
- * the registered Skill needs no filesystem of its own.
+ * What an agent cannot learn from a tool result is the *contract* around the
+ * review surface: that this build records each top-level turn's diff and shows
+ * it on demand, that nothing is reverted behind the agent's back, that a
+ * subagent's edits are absent from that record, and that the reviewable unit is
+ * the turn rather than the tool call. The body is a plain constant so the
+ * registered Skill needs no filesystem of its own.
  * @module @deepseek-ai/dsh-code-review/skill
  */
 
@@ -14,7 +15,7 @@ export const CODE_REVIEW_SKILL_NAME = 'dsh-change-review'
 
 /** One-line routing description shown in the model's Skill catalog. */
 export const CODE_REVIEW_SKILL_DESCRIPTION =
-  'Work with the User\'s keep/reject decisions over your file changes: what a rejection means, and how to write changes that are cheap to review'
+  'Work with the User\'s review of your changes: how each turn\'s diff is recorded, what that record leaves out, and how to keep a turn cheap to review'
 
 /**
  * The Skill instructions.
@@ -22,42 +23,47 @@ export const CODE_REVIEW_SKILL_DESCRIPTION =
  * Written for the model, in the imperative, and deliberately short: it is
  * loaded on demand and must not restate the tool schemas it refers to.
  */
-export const CODE_REVIEW_SKILL = `# Reviewing your changes with the User
+export const CODE_REVIEW_SKILL = `# Working with the User's review of your changes
 
-Every file mutation in a Session lands in the User's review queue. The pinned
-**Changes** page in the right Sidebar lists each changed file with its added and
-removed line counts; opening a file shows its diff, where each changed chunk
-carries a \`Keep\` / \`Reject\` control. The User can also keep or reject a whole
-file, or the whole list at once. A chunk is the smallest unit \`git add -i\`
-would offer if you split to the end: one maximal run of changed lines.
+DeepSeek Harness records what each top-level turn changed. It snapshots the
+working tree through git at the turn's start and again at its end, and copies
+any file whole before a file tool edits it, so it can also account for the files
+git does not cover. The User reads one file's comparison — side by side or
+unified, with the changed hunks drawn where they happened — in the right
+sidebar. \`/review\` opens the newest turn's comparison.
 
-The Session header's change count is the standing way back to that page, and
-\`/review\` opens it.
+**This build has no keep/reject step.** Nothing is reverted behind your back,
+no rejection is reported back to you, and nothing about your work reaches you
+except the User's own words. A comment on a change means the change is still in
+the file and the User has read it: edit exactly what they asked, leave what they
+accepted alone, and do not re-open a decision they already made.
 
-## A rejection is already done
+## What the record covers, and what it leaves out
 
-Rejecting a chunk reverts it in the working tree and records the decision on the
-Session. That record is projected back into your context as a note listing each
-rejected chunk by path and the text it added. Therefore:
+- **Only top-level turns are recorded.** A subagent's edits are never part of
+  the User's per-turn diff, so when you delegate, your own message has to carry
+  what the subagent changed.
+- A path whose content is unchanged at the turn's end is not listed at all.
+- A nested repository or submodule appears as a single entry; its internals do
+  not.
+- In a working directory with no git repository, only file-tool edits are
+  listed, and shell edits are absent from the record entirely.
+- Summaries and comparisons live on the Host only while the Session lives. A
+  Session reopened after a Host restart has no comparison for its earlier turns.
+- The record starts at the turn. If the working directory already held
+  uncommitted edits when the turn began, they are not attributed to you.
 
-- After a rejection note appears, the code is gone. Re-read the file before
-  building on it; never assume your edit is still there.
-- Do not re-apply a rejected change, and do not re-introduce it in another form,
-  unless the User asks for it.
-- If a rejection removed something you still believe is required, say so in your
-  next message and let the User decide. Do not silently work around it.
+## Write turns that are cheap to review
 
-## Write changes that are cheap to review
+The turn is the unit the User reviews, not the tool call, so:
 
-- One logical change per tool call. Two unrelated edits in one call become one
-  chunk that can only be kept or rejected as a unit.
+- **One coherent change per turn.** Two unrelated edits in one turn arrive as
+  one comparison the User has to hold in their head at once. Land the first,
+  let them read it, then start the second.
 - Keep the diff minimal: no unrelated reformatting, no whole-file rewrite where
-  an edit will do.
-- Describe what changed in the message that follows the call, so the User can
-  decide each chunk without re-deriving your intent.
-
-## When the User keeps everything
-
-Silence means no outstanding rejection. Carry on; the accepted changes are in
-the files and need no acknowledgement.
+  an edit will do, no incidental changes the User did not ask for.
+- **Say what changed and why in your own message.** The comparison is on
+  demand, so assume the User has not opened it; and a subagent's work is never
+  in it. A short account of each file you touched is what makes the turn
+  reviewable at all.
 `

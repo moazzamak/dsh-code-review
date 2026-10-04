@@ -1,10 +1,21 @@
 # @moazzamak/dsh-code-review
 
-A code-review pack for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`). It adds a `/review` command that brings up dsh's **Changes** page, and a Skill that tells the agent how to behave around the changes you keep or reject.
+A code-review pack for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`). It adds a `/review` command that opens the newest turn's changed files, compared one by one, and a Skill that tells the agent what that record covers and how to keep a turn cheap to review.
 
 > **Unofficial community pack.** Not affiliated with, endorsed by, or published by DeepSeek. See [Naming and affiliation](#naming-and-affiliation).
 
 English | [中文](README.zh.md)
+
+## Which dsh this drives
+
+DeepSeek Harness replaced its review surface in the 0.2 line, and this pack follows it.
+
+| Pack | dsh | What `/review` opens |
+| --- | --- | --- |
+| 0.2.x | 0.2 and later | The selected turn's **changed files**, each with a side-by-side or unified comparison. There is no keep/reject step. |
+| 0.1.x | 0.1.5 | The pinned **Changes** page, with per-chunk Keep/Reject that reverted a rejected chunk in the working tree. |
+
+dsh 0.2 removed the keep/reject surface entirely: nothing reverts a change behind the agent's back any more, no rejection is reported back to the model, and the diff record is read-only. The 0.2 Skill says so, because an agent told to expect a rejection note would wait for one that never arrives. Use 0.1.x only on a dsh 0.1.5 build.
 
 ## Install
 
@@ -22,38 +33,25 @@ Once installed, three things appear: a **Plugins** entry in Settings, `/review` 
 
 ### Desktop app
 
-The Electron desktop build runs the same dsh surfaces, so the **Changes** page is there without any plugin, and a build that carries the shortcut layer gives you the same actions from the keyboard:
-
-| Shortcut | Action |
-| --- | --- |
-| `Ctrl/Cmd+Shift+R` | Open the **Changes** page |
-| `Ctrl/Cmd+Shift+K` / `Ctrl/Cmd+Shift+J` | Keep / reject the change under review |
-| `Ctrl/Cmd+Shift+A` / `Ctrl/Cmd+Shift+D` | Keep / reject everything still undecided in the file |
-| `Alt+Down` / `Alt+Up` | Next / previous file awaiting review |
-
-Adding *this pack* to a packaged desktop app is a separate step: the app's **Desktop Plugins** window (`Ctrl/Cmd+,`) installs plugins into its own profile with its bundled pnpm. That window accepts npm registry specs only — `name`, `name@version`, or `name@tag` — and refuses `github:` and `file:` specs, so the Git install above is for the web/CLI profile. It needs the pack published to npm first:
-
-```sh
-npm publish    # from a checkout of this repository, logged in as the package owner
-```
+The Electron desktop build runs the same dsh surfaces, so the comparison view is there without any plugin. Adding *this pack* to a packaged desktop app is a separate step: the app's **Desktop Plugins** window installs plugins into its own profile with its bundled pnpm, and it accepts npm registry specs only. Add the bundle to that profile's `dsh.profile.bundles` list, or install it from a local checkout.
 
 ## What you get
 
-- **`/review`** — opens the pinned **Changes** page in the right sidebar: every file the agent changed that still has a change you have not decided. The change count in the Session header opens the same page.
-- **The `dsh-change-review` Skill** — how the agent learns to work with your decisions. It is told that a change you rejected has already been taken out of the file, that the rejection is reported back to it with the file path and the text that was removed, and that one tool call should carry one logical change so each change stays easy to judge on its own.
+- **`/review`** — opens the newest recorded turn's changed files in the right sidebar. Each row is one file; opening it shows that file's turn-start and turn-end contents as hunks, side by side or unified, with line wrapping. `/review` appears only while all three of these hold: the comparison view is registered, the Session's right column is mounted, and the Session has a turn whose changes were recorded. A command whose page has nowhere to open is worse than an absent command, so the pack hides it rather than offering a no-op.
+- **The `dsh-change-review` Skill** — what the agent cannot learn from a tool result: that a turn, not a tool call, is the unit you review; that only top-level turns are recorded, so a subagent's edits are never in your diff; that a Session reopened after a Host restart has no comparison for its earlier turns; and that nothing is reverted, so a comment on a change means the change is still in the file.
 
-The diff, the **Keep** / **Reject** buttons, the pending list, and the note the agent receives are part of dsh itself. This pack adds the shortcut and the instructions, nothing else.
+The recording, the comparison, and the turn-tail card are part of dsh itself. This pack adds the shortcut and the instructions, nothing else.
 
 ## Reviewing changes
 
-1. Run `/review`, or click the change count in the Session header.
-2. The **Changes** page lists every changed file with its added and removed line counts and how many changes are still undecided. Pick a row to open the file; the preview lands on its first undecided change.
-3. In the file, each changed chunk is drawn where it happened with **Keep** and **Reject** beside it. A *chunk* is the smallest unit `git add -i` would split out: one run of changed lines.
-4. **Keep** records the decision and leaves the file alone. **Reject** takes that one chunk back out of the file, then records it. Other chunks in the same file are untouched.
-5. Whole-file and whole-list shortcuts sit on the page too: each row carries **Keep** / **Reject** for its file, and the bar under the list carries **Keep all** / **Reject all**.
-6. A file that changed after you opened it is refused instead of reverted — **Reject** checks the file's version first, so it cannot undo edits you never saw.
+1. Run `/review`.
+2. The sidebar lists the newest turn's changed files, each with its added and removed line counts.
+3. Pick a file. Its comparison opens on the first changed file of the turn; **split**/**unified** and **line wrap** are controls on the view.
+4. A file whose contents are unchanged at the turn's end is not listed at all, and a file larger than the recorder's limit is listed without a comparison.
 
-Rejections are reported to the agent. dsh adds a context entry naming the changed files and the text that was removed, so the agent stops assuming its edit is still in the file and does not put it back. The entry costs nothing while nothing is rejected.
+### The turn-tail card
+
+By default dsh also draws a changed-files card under each turn in the conversation, and each card carries a **Review this turn's changes in the sidebar** action. Both are gated by one setting, **Show coding view** (`developerTools`), which also controls the Trajectory view and the full Agent preset picker. Turn it off and diffs stop being pushed into the transcript: `/review` becomes the way in. This pack does not read or change that setting.
 
 ## Requirements
 
@@ -61,18 +59,21 @@ The pack drives dsh's own review surface, so it needs a dsh build that includes 
 
 | What it uses | Package |
 | --- | --- |
-| The Changes page, the per-chunk diff rows, and the `changes` page kind | `@deepseek-ai/dsh-client-ui-sidebar-documentpreview` |
-| `isMounted()` on the right-sidebar service | `@deepseek-ai/dsh-client-ui-sidebar-right` |
-| The record of applied changes and review decisions | `@deepseek-ai/dsh-api-workspace-files` |
+| The comparison view and the `changes-review` tab kind | `@deepseek-ai/dsh-client-ui-deliverables` |
+| `openResource`, and the mounted-Session snapshot | `@deepseek-ai/dsh-client-ui-sidebar-right` |
+| The Session's loaded event window (`sessions.binding`) | `@deepseek-ai/dsh-api-session-controller` |
+| The `workspace/changes` event that names each recorded turn | `@deepseek-ai/dsh-workspace-changes` |
 | A Skill registry | `@deepseek-ai/dsh-skill` |
 
-At the time of this release those are not in a published dsh build yet. On a build that predates them the plugin still loads — the Skill is registered and `/review` appears — but there is no page for the command to open. Every dsh package is declared as an optional peer, so installing the pack never pulls a second copy of dsh.
+The chain and the address format it opens are private to those packages, so this pack restates them in one module (`src/protocol.ts`) and pins each restated fact with a test. A dsh build that renames the kind, the event, or the address fails that test rather than silently breaking `/review`.
+
+Every dsh package is declared as an optional peer, so installing the pack never pulls a second copy of dsh.
 
 ## Naming and affiliation
 
 Unofficial and community-built: not affiliated with, endorsed by, or published by DeepSeek. The review surface this pack drives is DeepSeek Harness's own code, MIT-licensed like this pack, and lives at [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) — problems with dsh itself belong there.
 
-Similar names exist on npm. These are unrelated packages by other authors: `dsh-code-review` (a read-only review agent preset), `@michengai/dsh-code-review`, `@dsh-plugin/dsh-code-review` (change summaries, a review tab, and guarded undo), and `@yangzhe1991/dsh-code-review` (a two-column git-diff page). This pack is **`@moazzamak/dsh-code-review`**, published only from [this repository](https://github.com/moazzamak/dsh-code-review).
+Similar names exist on npm. These are unrelated packages by other authors: `dsh-code-review` (a read-only review agent preset), `@moazzamak/dsh-code-review`, `@moazzamak/dsh-code-review` (change summaries, a review tab, and guarded undo), and `@moazzamak/dsh-code-review` (a two-column git-diff page). This pack is **`@moazzamak/dsh-code-review`**, published only from [this repository](https://github.com/moazzamak/dsh-code-review).
 
 ## Links
 
