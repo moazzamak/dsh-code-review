@@ -34,7 +34,8 @@ Two consequences worth knowing before you edit anything:
 | `cordis.patch.yml` | the single composition layer: insert the pack's row |
 | `src/index.ts`, `src/skill.ts` | Host half — the `dsh-change-review` runtime Skill |
 | `src/client/index.ts`, `src/client/locales.ts` | browser half — `/review` and its copy (zh source of truth + en) |
-| `src/protocol.ts` | the restated dsh surface: the tab kind, the `workspace/changes` event, and the review address |
+| `src/client/turn-tail.ts` | browser half — the pack's precedence over dsh's built-in changed-files card |
+| `src/protocol.ts` | the restated dsh surface: the tab kind, the closing-turn chain, the `workspace/changes` event, and the review address |
 | `lib/` | built artifacts, committed (see above) |
 | `tests/` | the three specs, run from the checkout |
 
@@ -106,8 +107,12 @@ cd <checkout>
   only while the comparison view is registered, the Session's column is mounted,
   and the Session holds an announced turn; it opens the address built from the
   newest announcement; and it reports a refused navigation instead of throwing.
-- `tests/protocol.spec.ts` — the restated kind, event type, address scheme, and
-  the coordinate bounds the comparison view's own parser applies.
+  It also pins the suppression: the entry claims a turn the built-in card would
+  claim, declines one that recorded nothing or declared presented files, and is
+  released with the fiber.
+- `tests/protocol.spec.ts` — the restated kind, chain, event type, address
+  scheme, election order, and the coordinate bounds the comparison view's own
+  parser applies.
 
 They are written for this repository, not mirrored from anywhere.
 

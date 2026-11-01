@@ -39,8 +39,22 @@ The Electron desktop build runs the same dsh surfaces, so the comparison view is
 
 - **`/review`** — opens the newest recorded turn's changed files in the right sidebar. Each row is one file; opening it shows that file's turn-start and turn-end contents as hunks, side by side or unified, with line wrapping. `/review` appears only while all three of these hold: the comparison view is registered, the Session's right column is mounted, and the Session has a turn whose changes were recorded. A command whose page has nowhere to open is worse than an absent command, so the pack hides it rather than offering a no-op.
 - **The `dsh-change-review` Skill** — what the agent cannot learn from a tool result: that a turn, not a tool call, is the unit you review; that only top-level turns are recorded, so a subagent's edits are never in your diff; that a Session reopened after a Host restart has no comparison for its earlier turns; and that nothing is reverted, so a comment on a change means the change is still in the file.
+- **Precedence over the built-in diff card** — while the pack is installed, dsh's own changed-files card no longer appears under each turn, so `/review` is the way into a turn's changes rather than one of two. See [Precedence](#precedence) for the one case the pack leaves alone.
 
-The recording, the comparison, and the turn-tail card are part of dsh itself. This pack adds the shortcut and the instructions, nothing else.
+The recording, the comparison, and the turn-tail card are part of dsh itself. This pack adds the shortcut, the instructions, and the precedence, nothing else.
+
+## Precedence
+
+`/review` opens dsh's own per-file comparison; it is the built-in diff view, reached by shortcut. So "the pack takes precedence" cannot mean a different viewer — it means dsh stops offering its **second** way in. That second way is the changed-files card dsh draws under each completed turn, whose header opens the same comparison.
+
+While the pack is installed, that card is suppressed: the transcript goes back to prose plus tool rows, and the diff surface lives in the right sidebar, where `/review` puts it.
+
+Two limits are deliberate.
+
+- **A turn that declared files with the `present` tool keeps the built-in card.** The card and the declared-file rows are drawn by one component, and this pack has no substitute for the rows, so suppressing the card there would delete the rows with it. The pack claims a turn only while the card is the only thing that component would draw.
+- **Precedence is the pack's, not a preference.** There is nothing to switch on and no setting it reads or changes; removing the pack restores the card.
+
+The pack does not read or change **Show coding view** (`developerTools`) — the setting described under [The turn-tail card](#the-turn-tail-card) — and turning that setting off still removes the card the ordinary way, whether or not this pack is installed.
 
 ## Reviewing changes
 
@@ -51,7 +65,9 @@ The recording, the comparison, and the turn-tail card are part of dsh itself. Th
 
 ### The turn-tail card
 
-By default dsh also draws a changed-files card under each turn in the conversation, and each card carries a **Review this turn's changes in the sidebar** action. Both are gated by one setting, **Show coding view** (`developerTools`), which also controls the Trajectory view and the full Agent preset picker. Turn it off and diffs stop being pushed into the transcript: `/review` becomes the way in. This pack does not read or change that setting.
+By default dsh also draws a changed-files card under each turn in the conversation, and each card carries a **Review this turn's changes in the sidebar** action. Both are gated by one setting, **Show coding view** (`developerTools`), which also controls the Trajectory view and the full Agent preset picker.
+
+Installing this pack suppresses the card without touching that setting — see [Precedence](#precedence). Turning the setting off still works the ordinary way and removes the card whether or not the pack is installed.
 
 ## Requirements
 
@@ -60,12 +76,14 @@ The pack drives dsh's own review surface, so it needs a dsh build that includes 
 | What it uses | Package |
 | --- | --- |
 | The comparison view and the `changes-review` tab kind | `@deepseek-ai/dsh-client-ui-deliverables` |
+| The closing-turn chain the built-in diff card is contributed to | `@deepseek-ai/dsh-client-ui-chat` |
+| The slot renderer the suppression contributes through | `@deepseek-ai/dsh-client-ui-renderer` |
 | `openResource`, and the mounted-Session snapshot | `@deepseek-ai/dsh-client-ui-sidebar-right` |
 | The Session's loaded event window (`sessions.binding`) | `@deepseek-ai/dsh-api-session-controller` |
 | The `workspace/changes` event that names each recorded turn | `@deepseek-ai/dsh-workspace-changes` |
 | A Skill registry | `@deepseek-ai/dsh-skill` |
 
-The chain and the address format it opens are private to those packages, so this pack restates them in one module (`src/protocol.ts`) and pins each restated fact with a test. A dsh build that renames the kind, the event, or the address fails that test rather than silently breaking `/review`.
+The tab kind, the chain key, the event, and the address format it opens are private to those packages, so this pack restates them in one module (`src/protocol.ts`) and pins each restated fact with a test. A dsh build that renames the kind, the chain, the event, or the address fails that test rather than silently breaking `/review` — or silently losing the precedence, which would put the card back without anyone noticing.
 
 Every dsh package is declared as an optional peer, so installing the pack never pulls a second copy of dsh.
 

@@ -1,8 +1,9 @@
 /**
  * Browser half: `/review` is offered exactly while the comparison view is
  * registered, the Session's column is mounted, and the Session holds a recorded
- * turn — and it opens that turn's address. Both the command and the dictionaries
- * are released with the fiber (HMR safety).
+ * turn — and it opens that turn's address. The same half takes the pack's
+ * precedence over the built-in turn-tail diff card, and both the command and
+ * the suppression are released with the fiber (HMR safety).
  */
 
 import { Context } from '@deepseek-ai/cordis'
@@ -10,7 +11,12 @@ import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { describe, expect, it, vi } from 'vitest'
 import { apply, inject, REVIEW_COMMAND } from '../src/client/index.ts'
 import { en, NS, zh } from '../src/client/locales.ts'
-import { changesReviewAddress, CHANGES_REVIEW_KIND, WORKSPACE_CHANGES_EVENT } from '../src/protocol.ts'
+import {
+  selectSuppressedChangeCard,
+  SUPPRESSION_PRIORITY,
+  SuppressedChangeCard,
+} from '../src/client/turn-tail.ts'
+import { changesReviewAddress, CHANGES_REVIEW_KIND, TURN_TAIL_SLOT, WORKSPACE_CHANGES_EVENT } from '../src/protocol.ts'
 
 /** The command contribution, as the real registry hands it back. */
 interface Contribution {
@@ -49,15 +55,28 @@ interface BenchOptions {
   readonly navigationRefused?: boolean
 }
 
+/** One chain entry this half contributed through the slot renderer. */
+interface SlotContribution {
+  readonly options: {
+    readonly name: string
+    readonly select: (owner: unknown) => unknown
+    readonly priority: number
+    readonly registrant: string
+  }
+  readonly component: unknown
+}
+
 /**
- * Boot the browser half over the four services it declares, with fakes that
- * record the registrations and the addresses the command opened.
+ * Boot the browser half over the services it declares, with fakes that record
+ * the registrations, the slot contributions, and the addresses the command
+ * opened.
  * @param options - staged Host answers.
  */
 async function bench(options: BenchOptions = {}): Promise<{
   ctx: Context
   fiber: ReturnType<Context['plugin']>
   contributions: Contribution[]
+  contributionsBySlot: Map<string, SlotContribution>
   opened: string[]
   warnings: string[]
 }> {
@@ -71,6 +90,7 @@ async function bench(options: BenchOptions = {}): Promise<{
     navigationRefused = false,
   } = options
   const contributions: Contribution[] = []
+  const contributionsBySlot = new Map<string, SlotContribution>()
   const opened: string[] = []
   const warnings: string[] = []
   vi.spyOn(console, 'warn').mockImplementation((message: string) => { warnings.push(message) })
@@ -82,6 +102,19 @@ async function bench(options: BenchOptions = {}): Promise<{
       return () => {
         const at = contributions.indexOf(contribution)
         if (at >= 0) contributions.splice(at, 1)
+      }
+    },
+  } as never)
+  ctx.provide('slots', {
+    inject(key: string, contribute: () => () => void) {
+      const dispose = contribute()
+      return () => { dispose() }
+    },
+    register(options: SlotContribution['options'], component: unknown) {
+      const contribution: SlotContribution = { options, component }
+      contributionsBySlot.set(options.name, contribution)
+      return () => {
+        if (contributionsBySlot.get(options.name) === contribution) contributionsBySlot.delete(options.name)
       }
     },
   } as never)
@@ -104,12 +137,17 @@ async function bench(options: BenchOptions = {}): Promise<{
   } as never)
   const fiber = ctx.plugin({ inject: [...inject], apply })
   await fiber.await()
-  return { ctx, fiber, contributions, opened, warnings }
+  return { ctx, fiber, contributions, contributionsBySlot, opened, warnings }
+}
+
+/** One closing Turn's owner currency, as the chat view hands it to the chain. */
+function ownerWith(deliverables: unknown): never {
+  return { turn: { data: { get: (key: string) => key === 'deliverables' ? deliverables : undefined } }, seq: 99 } as never
 }
 
 describe('code-review pack browser half', () => {
   it('declares the services it binds', () => {
-    expect(inject).toEqual(['commandUi', 'locale', 'sessions', 'sidebarRight', 'sidebarRightTabs'])
+    expect(inject).toEqual(['commandUi', 'locale', 'sessions', 'sidebarRight', 'sidebarRightTabs', 'slots'])
   })
 
   it('registers /review as an action', async () => {
@@ -219,5 +257,81 @@ describe('code-review pack browser half', () => {
 
   it('keeps the English dictionary key-identical to the Chinese source of truth', () => {
     expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort())
+  })
+})
+
+describe('code-review pack precedence over the built-in diff card', () => {
+  it('registers into the closing-turn chain below the built-in entry', async () => {
+    const { contributionsBySlot, fiber } = await bench()
+    const suppression = contributionsBySlot.get(TURN_TAIL_SLOT)
+    expect(suppression).toBeDefined()
+    expect(suppression?.component).toBe(SuppressedChangeCard)
+    expect(suppression?.options.priority).toBe(SUPPRESSION_PRIORITY)
+    // Ascending order: a lower band is tried first, so the election does not
+    // depend on which of the two plugins loaded first.
+    expect(suppression?.options.priority).toBeLessThan(0)
+    expect(suppression?.options.registrant).toContain('dsh-code-review')
+    await fiber.dispose()
+    expect(contributionsBySlot.has(TURN_TAIL_SLOT)).toBe(false)
+  })
+
+  it('suppresses the card, drawing nothing, on a turn that recorded changes', async () => {
+    const { contributionsBySlot, fiber } = await bench()
+    const suppression = contributionsBySlot.get(TURN_TAIL_SLOT)
+    expect(suppression?.options.select(ownerWith({ changes: { seq: 12 }, produced: ['a.ts'] }))).not.toBeNull()
+    expect(SuppressedChangeCard()).toBeNull()
+    await fiber.dispose()
+  })
+
+  it('leaves the built-in card alone when the turn recorded no changes', async () => {
+    const { contributionsBySlot, fiber } = await bench()
+    const select = contributionsBySlot.get(TURN_TAIL_SLOT)?.options.select
+    // No payload at all, a payload with no announcement, and an explicit null
+    // are all the same answer: nothing to suppress, so the built-in claims it.
+    expect(select?.(ownerWith(undefined))).toBeNull()
+    expect(select?.(ownerWith({ produced: ['a.ts'] }))).toBeNull()
+    expect(select?.(ownerWith({ changes: null, produced: ['a.ts'] }))).toBeNull()
+    await fiber.dispose()
+  })
+
+  it('leaves a turn that declared presented files to the built-in entry', async () => {
+    const { contributionsBySlot, fiber } = await bench()
+    const select = contributionsBySlot.get(TURN_TAIL_SLOT)?.options.select
+    // The built-in entry draws the declared-file row as well as the card; the
+    // pack replaces only the card, so it must not take the row away with it.
+    expect(select?.(ownerWith({ changes: { seq: 12 }, presented: [{ path: 'a.ts' }] }))).toBeNull()
+    // An empty list is not a row: the card is still the only thing drawn.
+    expect(select?.(ownerWith({ changes: { seq: 12 }, presented: [] }))).not.toBeNull()
+    await fiber.dispose()
+  })
+
+  it('keeps the pack when the Host has no slot renderer', async () => {
+    const contributions: Contribution[] = []
+    const ctx = new Context()
+    ctx.provide('locale', new LocaleRuntime(ctx))
+    ctx.provide('commandUi', {
+      register(contribution: Contribution) {
+        contributions.push(contribution)
+        return () => {
+          const at = contributions.indexOf(contribution)
+          if (at >= 0) contributions.splice(at, 1)
+        }
+      },
+    } as never)
+    ctx.provide('sidebarRightTabs', { get: () => undefined } as never)
+    ctx.provide('sidebarRight', {} as never)
+    ctx.provide('sessions', { binding: () => undefined } as never)
+    const fiber = ctx.plugin({ inject: ['commandUi', 'locale'], apply })
+    await fiber.await()
+    expect(contributions.map(contribution => contribution.name)).toEqual([REVIEW_COMMAND])
+    await fiber.dispose()
+  })
+
+  it('declines every payload shape it does not recognize', () => {
+    // A renamed or re-shaped payload must decline, never claim: claiming a turn
+    // the pack cannot reason about would hide a card nothing replaces.
+    for (const payload of [undefined, 42, 'changes', [], null, {}, { changes: undefined }]) {
+      expect(selectSuppressedChangeCard(ownerWith(payload))).toBeNull()
+    }
   })
 })

@@ -1,17 +1,22 @@
 /**
- * The pack's two restated dsh surfaces, pinned.
+ * The pack's restated dsh surfaces, pinned.
  *
  * The comparison view that `/review` opens keeps its tab kind and its address
- * scheme module-private, so this pack restates them. These tests state what it
- * restates and against which rules, so a rename upstream fails here — loudly —
- * instead of leaving `/review` a command that opens nothing.
+ * scheme module-private, so this pack restates them. The closing-turn chain the
+ * built-in diff card is contributed to is the same kind of fact: a slot key the
+ * pack cannot import, and an election order it has to beat. These tests state
+ * what it restates and against which rules, so a rename upstream fails here —
+ * loudly — instead of leaving `/review` a command that opens nothing, or a
+ * suppression that silently stops suppressing.
  */
 
 import { describe, expect, it } from 'vitest'
+import { SUPPRESSION_PRIORITY } from '../src/client/turn-tail.ts'
 import {
   changesReviewAddress,
   CHANGES_REVIEW_KIND,
   isLatestChanges,
+  TURN_TAIL_SLOT,
   WORKSPACE_CHANGES_EVENT,
 } from '../src/protocol.ts'
 
@@ -44,6 +49,18 @@ describe('restated dsh review surface', () => {
 
   it('names the event the change recorder announces each turn with', () => {
     expect(WORKSPACE_CHANGES_EVENT).toBe('workspace/changes')
+  })
+
+  it('names the chain the built-in diff card is contributed to', () => {
+    expect(TURN_TAIL_SLOT).toBe('conversation.chat.turnTail')
+  })
+
+  it('runs below the built-in entry\'s default election order', () => {
+    // Chain entries are tried in ascending `priority`, ties in registration
+    // order. The built-in card registers with no priority at all, which the
+    // registry reads as 0, so anything below 0 wins the election outright
+    // instead of depending on which plugin loaded first.
+    expect(SUPPRESSION_PRIORITY).toBeLessThan(0)
   })
 
   it('builds an address the comparison view accepts, and reads back', () => {

@@ -17,10 +17,15 @@
  * - The announcing event is `workspace/changes`, appended once per top-level
  *   turn by `@deepseek-ai/dsh-workspace-changes` carrying only `{ turn }`; the
  *   event's sequence identifies the recorded diff.
+ * - `conversation.chat.turnTail` is the chat view's closing-turn chain, which
+ *   `@deepseek-ai/dsh-client-ui-deliverables` also contributes to in order to
+ *   draw the changed-files card this pack takes precedence over.
  * @module @deepseek-ai/dsh-code-review/protocol
  */
 /** Right-Sidebar tab kind owned by the comparison view this pack opens. */
 export declare const CHANGES_REVIEW_KIND = "changes-review";
+/** Closing-turn chain the built-in changed-files card is contributed to. */
+export declare const TURN_TAIL_SLOT = "conversation.chat.turnTail";
 /** Event type the change recorder appends once per top-level turn. */
 export declare const WORKSPACE_CHANGES_EVENT = "workspace/changes";
 /** One recorded turn's review coordinates. */

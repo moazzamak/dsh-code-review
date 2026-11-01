@@ -19,6 +19,11 @@
  * The window is borrowed, not owned: `sessions.binding()` returns nothing for a
  * Session the browser is not already retaining, and that is treated as "nothing
  * to open" rather than as an error.
+ *
+ * The same half takes the pack's precedence over dsh's own entry point: the
+ * changed-files card the closing-turn chain would otherwise draw is suppressed,
+ * so `/review` is the way into a Turn's changes rather than one of two. That
+ * decision, and what it deliberately leaves alone, is `./turn-tail.ts`.
  * @module @deepseek-ai/dsh-code-review/client
  */
 
@@ -28,6 +33,7 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-commands/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import { en, NS, zh, type CodeReviewKey } from './locales.ts'
+import { suppressBuiltInChangeCard } from './turn-tail.ts'
 import {
   changesReviewAddress,
   CHANGES_REVIEW_KIND,
@@ -46,19 +52,21 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** A Session identity, as the Sessions service and a command's context spell it. */
 type SessionId = SessionBinding['sessionId']
 
-/** Required browser services: the command surface, copy, the Sessions service, and the right Sidebar with its tab registry. */
-export const inject = ['commandUi', 'locale', 'sessions', 'sidebarRight', 'sidebarRightTabs']
+/** Required browser services: the command surface, copy, the Sessions service, the right Sidebar with its tab registry, and the slot renderer the suppression contributes through. */
+export const inject = ['commandUi', 'locale', 'sessions', 'sidebarRight', 'sidebarRightTabs', 'slots']
 
 /** The slash command this pack contributes. */
 export const REVIEW_COMMAND = 'review'
 
 /**
- * Client plugin body: register the dictionaries and the `/review` command.
+ * Client plugin body: register the dictionaries, the `/review` command, and the
+ * pack's precedence over the built-in turn-tail diff card.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
   const t = ctx.locale.bind(NS)
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'code-review-pack: dictionaries')
+  suppressBuiltInChangeCard(ctx)
   ctx.effect(() => ctx.commandUi.register({
     name: REVIEW_COMMAND,
     label: () => t('command.review.label'),

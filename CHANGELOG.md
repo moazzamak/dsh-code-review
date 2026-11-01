@@ -6,6 +6,27 @@ All notable changes to this pack are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Precedence over dsh's built-in changed-files card.** With the pack installed,
+  the card dsh draws under each completed turn no longer appears, so `/review`
+  is the way into a turn's changes rather than one of two. The pack contributes
+  a `conversation.chat.turnTail` chain entry at `priority: -1` — below the
+  built-in entry's default `0`, so the election does not depend on plugin load
+  order — whose selector claims the turns the built-in card would claim and
+  whose component renders nothing. A turn that declared files with the `present`
+  tool is left to the built-in entry, because the card and the declared-file
+  rows are drawn by one component and this pack has no substitute for the rows.
+- `TURN_TAIL_SLOT` in `src/protocol.ts`, pinned by `tests/protocol.spec.ts`
+  together with the election order, and `src/client/turn-tail.ts` holding the
+  selector, the empty component, and the contribution.
+
+### Changed
+
+- The browser half declares `slots` among its required services. A Host without
+  the slot renderer keeps `/review` and the Skill and gets no suppression, rather
+  than the pack failing to load.
+
 ## [0.2.0] — 2026-10-04
 
 Ported to the review surface dsh 0.2 ships. **Breaking**: `/review` no longer

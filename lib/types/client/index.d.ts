@@ -19,6 +19,11 @@
  * The window is borrowed, not owned: `sessions.binding()` returns nothing for a
  * Session the browser is not already retaining, and that is treated as "nothing
  * to open" rather than as an error.
+ *
+ * The same half takes the pack's precedence over dsh's own entry point: the
+ * changed-files card the closing-turn chain would otherwise draw is suppressed,
+ * so `/review` is the way into a Turn's changes rather than one of two. That
+ * decision, and what it deliberately leaves alone, is `./turn-tail.ts`.
  * @module @deepseek-ai/dsh-code-review/client
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis';
@@ -29,12 +34,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
         codeReview: CodeReviewKey;
     }
 }
-/** Required browser services: the command surface, copy, the Sessions service, and the right Sidebar with its tab registry. */
+/** Required browser services: the command surface, copy, the Sessions service, the right Sidebar with its tab registry, and the slot renderer the suppression contributes through. */
 export declare const inject: string[];
 /** The slash command this pack contributes. */
 export declare const REVIEW_COMMAND = "review";
 /**
- * Client plugin body: register the dictionaries and the `/review` command.
+ * Client plugin body: register the dictionaries, the `/review` command, and the
+ * pack's precedence over the built-in turn-tail diff card.
  * @param ctx - client root context.
  */
 export declare function apply(ctx: ClientContext): void;
